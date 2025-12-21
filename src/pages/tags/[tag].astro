@@ -1,0 +1,38 @@
+---
+import BlogPost from "../../components/BlogPost.astro";
+import BaseLayout from "../../layout/BaseLayout.astro";
+
+export async function getStaticPaths() {
+  const allPosts = Object.values(
+    import.meta.glob("../posts/*.md", { eager: true }),
+  ); // I don't understand why this line need to be in the `getStaticPaths()` functions. I've tried putting it out and the code no longer work even though the lsp did not complain.
+
+  const uniqueTags = [
+    ...new Set(allPosts.map((post: any) => post.frontmatter.tags).flat()),
+  ]; // I understand most of the code here excluding `[...new Set()];`, like what exactly is `...new`
+
+  return uniqueTags.map((tag) => {
+    const filteredPosts = allPosts.filter((post: any) =>
+      post.frontmatter.tags.includes(tag),
+    );
+    return {
+      params: { tag },
+      props: { posts: filteredPosts },
+    };
+  });
+}
+
+const { tag } = Astro.params;
+const { posts } = Astro.props;
+---
+
+<BaseLayout pageTitle={tag}>
+  <p>Post tagged with {tag}</p>
+  <ul>
+    {
+      posts.map((post: any) => (
+        <BlogPost url={post.url} title={post.frontmatter.title} />
+      ))
+    }
+  </ul>
+</BaseLayout>
